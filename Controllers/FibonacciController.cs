@@ -1,3 +1,4 @@
+using FibonacciApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FibonacciApi.Controllers;
@@ -7,25 +8,24 @@ namespace FibonacciApi.Controllers;
 public class FibonacciController : ControllerBase
 {
 
+    private readonly FibonacciService _fibonacciService;
+
+    public FibonacciController(FibonacciService fibonacciService)
+    {
+        _fibonacciService = fibonacciService;
+    }
+
     [Route("subsequence/{startIndex}/{endIndex}/{useCache}")]
     [HttpGet]
     public async Task<IActionResult> GetSubsequence(
             [FromRoute] int startIndex = 0,
-            [FromRoute] int endIndex = 5,
+            [FromRoute] int endIndex = 7,
             [FromRoute] bool useCache = true,
             [FromQuery] int timeout = 1000,
             [FromQuery] int maxMemory = 1000)
     {
-        // Bounce back the query string parameters
-        var response = new
-        {
-            startIndex,
-            endIndex,
-            useCache,
-            timeout,
-            maxMemory
-        };
+        var subsequence = await _fibonacciService.GenerateSubsequence(startIndex, endIndex);
 
-        return await Task.FromResult(Ok(response));
+        return Ok(subsequence);
     }
 }
