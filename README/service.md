@@ -47,3 +47,12 @@ Things that I use in my concurrent code:
 ## The Binet's Formula
 
 The [Binet's formula](https://en.wikipedia.org/wiki/Fibonacci_sequence#Binet's_formula) which allows to compute a random item in a Fibonacci sequence, without having to start from the beginning!
+
+## Memory Limit
+
+Another requirement of the project is to set a **memory limit** the program can use, and abort execution if the limit is reached. The program should return **as many generated numbers as possible** similarly to the way it does in case if timeout is reached.
+
+> [!NOTE]
+> Languages with [garbage collection](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)), relieve the programmer from doing manual memory management. The garbage collector attempts to reclaim memory that was allocated by the program, but is no longer referenced; such memory is called garbage.
+
+In .NET's [Common Language Runtime](https://learn.microsoft.com/en-us/dotnet/standard/clr), the [garbage collector (GC)](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) manages the allocation and release of memory for an application. Using the [GC class](https://learn.microsoft.com/en-us/dotnet/api/system.gc?view=net-8.0) we have access to the system garbage collector. One of the methods in this class is [GC.GetTotalMemory](https://learn.microsoft.com/en-us/dotnet/api/system.gc.gettotalmemory?view=net-8.0), which we can use to get and display the number of bytes currently allocated in managed memory.

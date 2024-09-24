@@ -4,6 +4,7 @@ namespace FibonacciApi.Services
     {
         public List<ulong>? Subsequence { get; set; }
         public bool TimeoutOccurred { get; set; }
+        public bool MemoryLimitReached { get; set; }
     }
 
     public class FibonacciService
@@ -22,13 +23,17 @@ namespace FibonacciApi.Services
         }
 
         // Method to return a subsequence of the Fibonacci sequence with timeout handling
-        public async Task<FibonacciResult> GenerateSubsequence(int startIndex, int endIndex, int timeout)
+        public async Task<FibonacciResult> GenerateSubsequence(
+            int startIndex,
+            int endIndex,
+            int timeoutMilliseconds,
+            long maxMemoryUsageBytes)
         {
             var subsequence = new List<ulong>();
             var cts = new CancellationTokenSource();
 
             // Start a task to cancel the operation after the timeout
-            var timeoutTask = Task.Delay(timeout, cts.Token);
+            var timeoutTask = Task.Delay(timeoutMilliseconds, cts.Token);
 
             for (int i = startIndex; i <= endIndex; i++)
             {
@@ -52,6 +57,23 @@ namespace FibonacciApi.Services
                         };
                     }
 
+                    // Check if memory usage has exceeded the limit
+                    long currentMemoryUsage = GC.GetTotalMemory(false);
+
+                    int currentMemoryUsageMB = (int)(currentMemoryUsage / 1024 / 1024);           // debug
+                    System.Console.WriteLine($"Current memory usage: {currentMemoryUsageMB} MB"); // debug
+                    
+                    if (currentMemoryUsage >= maxMemoryUsageBytes)
+                    {
+                        cts.Cancel();                   // Cancel the operation due to memory limit
+                        return new FibonacciResult
+                        {
+                            Subsequence = subsequence,  // Return whatever has been calculated
+                            TimeoutOccurred = false,
+                            MemoryLimitReached = true   // Memory limit was reached
+                        };
+                    }
+
                     ulong fibonacciNumber = BinetsFormula(index);
 
                     lock (subsequence)
@@ -59,13 +81,15 @@ namespace FibonacciApi.Services
                         subsequence.Add(fibonacciNumber); // Add the computed Fibonacci number
                     }
                 }
+                // Handle the cancellation exception due to timeout or memory limit
                 catch (OperationCanceledException)
                 {
                     // Task was canceled, timeout occurred
                     return new FibonacciResult
                     {
-                        Subsequence = subsequence, // Return partial subsequence
-                        TimeoutOccurred = true     // Indicate timeout
+                        Subsequence = subsequence,  // Return partial subsequence
+                        TimeoutOccurred = true,     // Indicate timeout
+                        MemoryLimitReached = false
                     };
                 }
                 catch (OverflowException)
@@ -79,7 +103,8 @@ namespace FibonacciApi.Services
             return new FibonacciResult
             {
                 Subsequence = subsequence,
-                TimeoutOccurred = false
+                TimeoutOccurred = false,
+                MemoryLimitReached = false
             };
         }
     }
