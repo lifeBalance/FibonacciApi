@@ -39,3 +39,14 @@ In our controller action we're using a mechanism known as [model binding](https:
 - `[FromHeader]` - Gets values from HTTP headers.
 
 In our controller, `[FromRoute]` is related to the string we used in the `[Route()]` attribute used in this action.
+
+## Dependency Injection
+
+[Dependency injection](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-8.0) is a software design pattern that allows us to inject dependencies into a class. ASP.NET Core has **built-in support** for this, which is achieved via [controller constructor](https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/dependency-injection?view=aspnetcore-8.0). That's how I injected the `FibonacciService` into the controller (we depend on it to do our thing).
+
+## JSON Serialization/Deserialization
+
+Regarding this project requirement, it seems that in **ASP.NET 8**, by default:
+
+- Controllers return **responses** in JSON format if the client requests it.
+- Incoming JSON payloads in the **request body** are deserialized into C# objects automatically. I was using a `GET` request, and sending my parameters encoded in the URL and in the [query string](https://en.wikipedia.org/wiki/Query_string).
