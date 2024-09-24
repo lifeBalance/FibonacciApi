@@ -26,6 +26,16 @@ public class FibonacciController : ControllerBase
     {
         var subsequence = await _fibonacciService.GenerateSubsequence(startIndex, endIndex);
 
-        return Ok(subsequence);
+        var responseBody = new
+        {
+            StartIndex = startIndex,
+            EndIndex = endIndex,
+            UseCache = useCache,
+            Timeout = timeout,
+            MaxMemory = maxMemory,
+            Subsequence = subsequence
+        };
+
+        return Ok(responseBody);
     }
 }

@@ -3,32 +3,27 @@ namespace FibonacciApi.Services
 {
     public class FibonacciService
     {
-        // Method to generate the Fibonacci sequence up to a specified length
-        // 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, ....
-        private static async Task<List<int>> GenerateFibonacciSequence(int length)
+        // Fibonacci sequence: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
+        // Method to calculate the nth Fibonacci number using Binet's Formula
+        public static int BinetsFormula(int n)
         {
-            // Initialize with the first two numbers in the Fibonacci sequence
-            var sequence = new List<int> { 0, 1 };
-
-            // Generate the rest of the sequence starting from the third number
-            for (int i = 2; i < length; i++)
-            {
-                // Add 500ms delay to simulate a slow operation
-                await Task.Delay(500);
-                sequence.Add(sequence[i - 1] + sequence[i - 2]);
-            }
-
-            return sequence;
+            double phi = (1 + Math.Sqrt(5)) / 2;
+            double psi = (1 - Math.Sqrt(5)) / 2;
+            return (int)Math.Round((Math.Pow(phi, n) - Math.Pow(psi, n)) / Math.Sqrt(5));
         }
 
         // Method to return a subsequence of the Fibonacci sequence
         public async Task<List<int>> GenerateSubsequence(int startIndex, int endIndex)
         {
-            var sequence = await GenerateFibonacciSequence(endIndex + 1);
-            var subsequence = sequence
-                .Skip(startIndex)
-                .Take(endIndex - startIndex + 1)
-                .ToList();
+            // Generate the subsequence using the Binet's formula
+            var subsequence = new List<int>();
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                // Add 500ms delay to simulate a slow operation
+                await Task.Delay(500);
+                subsequence.Add(BinetsFormula(i));
+            }
+
             return subsequence;
         }
     }
