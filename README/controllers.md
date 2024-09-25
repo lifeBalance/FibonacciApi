@@ -50,3 +50,11 @@ Regarding this project requirement, it seems that in **ASP.NET 8**, by default:
 
 - Controllers return **responses** in JSON format if the client requests it.
 - Incoming JSON payloads in the **request body** are deserialized into C# objects automatically. I was using a `GET` request, and sending my parameters encoded in the URL and in the [query string](https://en.wikipedia.org/wiki/Query_string).
+
+---
+[:arrow_backward:][back] ║ [:house:][home] ║ [:arrow_forward:][next]
+
+<!-- navigation -->
+[home]: /README.md
+[back]: ./description.md
+[next]: ./service.md

@@ -42,3 +42,11 @@ I made some design choices that could be up for discussion:
 - Using the `startIndex` and `endIndex` as cache keys. I guess in a real app, we could use some user id so users don't have access to other users cache results?
 - When a **complete subsequence** is generated, I always store them, regardless if `useCache` was true or not.
 - I configured the expiration time to **5 minutes**, don't know what's the "standard" (never used cache before).
+
+---
+[:arrow_backward:][back] ║ [:house:][home] ║ [:arrow_forward:][next]
+
+<!-- navigation -->
+[home]: /README.md
+[back]: ./service.md
+[next]: /README.md

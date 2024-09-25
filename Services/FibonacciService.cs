@@ -26,9 +26,13 @@ namespace FibonacciApi.Services
         public async Task<FibonacciResult> GenerateSubsequence(
             int startIndex,
             int endIndex,
-            int timeoutMilliseconds,
-            long maxMemoryUsageBytes)
+            int timeoutSeconds,
+            long maxMemoryMB)
         {
+            // Convert to the proper units
+            long maxMemoryBytes = maxMemoryMB * 1024 * 1024;
+            int timeoutMilliseconds = timeoutSeconds * 1000;
+
             var subsequence = new List<ulong>();
             var cts = new CancellationTokenSource();
 
@@ -62,8 +66,8 @@ namespace FibonacciApi.Services
 
                     int currentMemoryUsageMB = (int)(currentMemoryUsage / 1024 / 1024);           // debug
                     System.Console.WriteLine($"Current memory usage: {currentMemoryUsageMB} MB"); // debug
-                    
-                    if (currentMemoryUsage >= maxMemoryUsageBytes)
+                    System.Console.WriteLine($"Current memory usage: {currentMemoryUsage} bytes"); // debug
+                    if (currentMemoryUsage >= maxMemoryBytes)
                     {
                         cts.Cancel();                   // Cancel the operation due to memory limit
                         return new FibonacciResult
