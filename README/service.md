@@ -58,7 +58,7 @@ Another requirement of the project is to set a **memory limit** the program can 
 In .NET's [Common Language Runtime](https://learn.microsoft.com/en-us/dotnet/standard/clr), the [garbage collector (GC)](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) manages the allocation and release of memory for an application. Using the [GC class](https://learn.microsoft.com/en-us/dotnet/api/system.gc?view=net-8.0) we have access to the system garbage collector. One of the methods in this class is [GC.GetTotalMemory](https://learn.microsoft.com/en-us/dotnet/api/system.gc.gettotalmemory?view=net-8.0), which we can use to get and display the number of bytes currently allocated in managed memory.
 
 > [!CAUTION]
-> For some reason, using the `Cancel` method on the `CancellationTokenSource`, and then throwing with `cts.Token.ThrowIfCancellationRequested();` wasn't working; for some reason, the `timeoutTask` was marked as **completed**.
+> For some reason, using the `Cancel` method on the `CancellationTokenSource`, and then throwing with `cts.Token.ThrowIfCancellationRequested();` wasn't working; for some reason, the `timeoutTask` was marked as **completed**. So I had to throw a custom `MemoryLimitException` and catch it separately.
 
 ---
 [:arrow_backward:][back] ║ [:house:][home] ║ [:arrow_forward:][next]
