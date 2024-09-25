@@ -7,6 +7,14 @@ namespace FibonacciApi.Services
         public bool MemoryLimitReached { get; set; }
     }
 
+    public class MemoryLimitException : Exception
+    {
+        public MemoryLimitException()
+        {
+        }
+    }
+
+
     public class FibonacciService
     {
         // Method to calculate the nth Fibonacci number using Binet's Formula
@@ -23,34 +31,25 @@ namespace FibonacciApi.Services
         }
 
         // Method to return a subsequence of the Fibonacci sequence with timeout handling
-        public async Task<FibonacciResult> GenerateSubsequence(
-            int startIndex,
-            int endIndex,
-            int timeoutSeconds,
-            long maxMemoryMB)
+        public async Task<FibonacciResult> GenerateSubsequence(int startIndex, int endIndex, long maxMemoryBytes, int timeoutMilliseconds)
         {
-            // Convert to the proper units
-            long maxMemoryBytes = maxMemoryMB * 1024 * 1024;
-            int timeoutMilliseconds = timeoutSeconds * 1000;
-
+            // int timeoutMilliseconds = timeoutSeconds * 1000;
+            // long maxMemoryBytes = maxMemoryMB * 1024 * 1024;
             var subsequence = new List<ulong>();
             var cts = new CancellationTokenSource();
 
-            // Start a task to cancel the operation after the timeout
+            // Start a task to control the timeout
             var timeoutTask = Task.Delay(timeoutMilliseconds, cts.Token);
 
-            for (int i = startIndex; i <= endIndex; i++)
+            try
             {
-                int index = i; // Capture the loop variable
-
-                try
+                for (int i = startIndex; i <= endIndex; i++)
                 {
-                    // Simulate a slow operation with a 500ms delay for each Fibonacci number
-                    // If the cancellation token is signaled (e.g., due to a timeout), 
-                    // the delay will be canceled, and an OperationCanceledException will be thrown.
-                    await Task.Delay(500, cts.Token);
+                    // Run Fibonacci calculation and timeout task in parallel
+                    var fibonacciTask = PerformFibonacciCalculation(i, subsequence, maxMemoryBytes, cts);
+                    var completedTask = await Task.WhenAny(fibonacciTask, timeoutTask);
 
-                    if (timeoutTask.IsCompleted)
+                    if (completedTask == timeoutTask)
                     {
                         // Timeout occurred
                         cts.Cancel(); // Cancel the operation
@@ -60,56 +59,81 @@ namespace FibonacciApi.Services
                             TimeoutOccurred = true     // Indicate that a timeout occurred
                         };
                     }
-
-                    // Check if memory usage has exceeded the limit
-                    long currentMemoryUsage = GC.GetTotalMemory(false);
-
-                    int currentMemoryUsageMB = (int)(currentMemoryUsage / 1024 / 1024);           // debug
-                    System.Console.WriteLine($"Current memory usage: {currentMemoryUsageMB} MB"); // debug
-                    System.Console.WriteLine($"Current memory usage: {currentMemoryUsage} bytes"); // debug
-                    if (currentMemoryUsage >= maxMemoryBytes)
-                    {
-                        cts.Cancel();                   // Cancel the operation due to memory limit
-                        return new FibonacciResult
-                        {
-                            Subsequence = subsequence,  // Return whatever has been calculated
-                            TimeoutOccurred = false,
-                            MemoryLimitReached = true   // Memory limit was reached
-                        };
-                    }
-
-                    ulong fibonacciNumber = BinetsFormula(index);
-
-                    lock (subsequence)
-                    {
-                        subsequence.Add(fibonacciNumber); // Add the computed Fibonacci number
-                    }
+                    // Ensure that the Fibonacci task completed successfully
+                    await fibonacciTask;
                 }
-                // Handle the cancellation exception due to timeout or memory limit
-                catch (OperationCanceledException)
+            }
+            catch (MemoryLimitException)
+            {
+                System.Console.WriteLine($"Memory limit exception"); // debug
+                return new FibonacciResult
                 {
-                    // Task was canceled, timeout occurred
+                    Subsequence = subsequence,
+                    MemoryLimitReached = true
+                };
+            }
+            catch (OperationCanceledException ex)
+            {
+                System.Console.WriteLine($"Operation cancelled: {ex.Message}"); // debug
+                if (timeoutTask.IsCompleted)
+                {
+                    System.Console.WriteLine("Operation was cancelled due to timeout."); // debug
                     return new FibonacciResult
                     {
-                        Subsequence = subsequence,  // Return partial subsequence
-                        TimeoutOccurred = true,     // Indicate timeout
-                        MemoryLimitReached = false
+                        Subsequence = subsequence,
+                        TimeoutOccurred = true
                     };
                 }
-                catch (OverflowException)
+                else
                 {
-                    // Handle overflow exception, but continue processing
-                    Console.WriteLine($"Overflow occurred while calculating the {index}th Fibonacci number.");
+                    System.Console.WriteLine("Operation was cancelled due to memory limit."); // debug
+                    return new FibonacciResult
+                    {
+                        Subsequence = subsequence,
+                        MemoryLimitReached = true
+                    };
                 }
             }
 
-            // If no timeout occurred, return the full subsequence
             return new FibonacciResult
             {
                 Subsequence = subsequence,
                 TimeoutOccurred = false,
                 MemoryLimitReached = false
             };
+        }
+        private static async Task PerformFibonacciCalculation(
+            int index,
+            List<ulong> subsequence,
+            long maxMemoryBytes,
+            CancellationTokenSource cts)
+        {
+            // Simulate a slow operation with a 500ms delay for each Fibonacci number
+            await Task.Delay(500, cts.Token);
+
+            // Check if memory usage has exceeded the limit
+            long currentMemoryUsage = GC.GetTotalMemory(false);
+
+            System.Console.WriteLine($"Memory usage: {currentMemoryUsage:N0} bytes (max {maxMemoryBytes:N0})"); // debug
+
+            if (currentMemoryUsage >= maxMemoryBytes)
+            {
+                System.Console.WriteLine("Memory limit reached."); // debug
+                // Couldn't make it work with the code below (interesting to know why...)
+                throw new MemoryLimitException();
+
+                // Request cancellation
+                // cts.Cancel();
+                // System.Console.WriteLine("Cancellation requested."); // debug
+                // cts.Token.ThrowIfCancellationRequested();
+            }
+
+            ulong fibonacciNumber = BinetsFormula(index);
+
+            lock (subsequence)
+            {
+                subsequence.Add(fibonacciNumber); // Add the computed Fibonacci number
+            }
         }
     }
 }

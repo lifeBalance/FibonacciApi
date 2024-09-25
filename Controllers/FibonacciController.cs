@@ -24,8 +24,8 @@ public class FibonacciController : ControllerBase
             [FromRoute] int startIndex = 0,
             [FromRoute] int endIndex = 20,
             [FromRoute] bool useCache = true,
-            [FromQuery] int timeoutSeconds = 8,
-            [FromQuery] int maxMemoryMB = 100)
+            [FromQuery] int timeoutMilliseconds = 8000,
+            [FromQuery] int maxMemoryBytes = 1_000_000)
     {
         // Validate input
         if (startIndex < 0 || endIndex < startIndex)
@@ -52,8 +52,8 @@ public class FibonacciController : ControllerBase
         FibonacciResult result = await _fibonacciService.GenerateSubsequence(
             startIndex,
             endIndex,
-            maxMemoryMB,
-            timeoutSeconds);
+            maxMemoryBytes,
+            timeoutMilliseconds);
 
         // Sort subsequence (in place) in ascending order before returning it
         result.Subsequence?.Sort();
@@ -68,21 +68,26 @@ public class FibonacciController : ControllerBase
             _memoryCache.Set(cacheKey, result, cacheEntryOptions);
         }
 
-        // Print the subsequence length
         // Console.WriteLine($"Subsequence length: {result.Subsequence?.Count}"); // debug
 
         var responseBody = new Dictionary<string, object>();
 
         if (result.Subsequence != null && result.Subsequence.Count > 0)
+        {
+            System.Console.WriteLine($"subsequence is {string.Join(", ", result.Subsequence)}");
             responseBody["Subsequence"] = result.Subsequence;
+        }
 
         if (result.TimeoutOccurred)
+        {
             responseBody["TimeoutOccurred"] = result.TimeoutOccurred;
+        }
 
         if (result.MemoryLimitReached)
+        {
             responseBody["MemoryLimitReached"] = result.MemoryLimitReached;
+        }
 
-        System.Console.WriteLine("subsequence is", result.Subsequence);
         // Check if no numbers were generated and a timeout occurred
         if ((result.Subsequence == null || result.Subsequence.Count == 0) && (result.TimeoutOccurred || result.MemoryLimitReached))
         {
@@ -90,10 +95,11 @@ public class FibonacciController : ControllerBase
                 "Timeout occurred before generating any Fibonacci numbers."
                 :
                 "Memory limit reached before generating any Fibonacci numbers.";
+
             // Return an error response if no items and timeout occurred
             return StatusCode(408, new
             {
-                Message = message
+                Error = message
             });
         }
 
