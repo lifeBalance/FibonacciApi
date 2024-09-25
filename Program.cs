@@ -12,6 +12,9 @@ builder.Services.AddSwaggerGen();
 // Register the FibonacciService
 builder.Services.AddScoped<FibonacciService>();
 
+// Register IMemoryCache with the service container
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

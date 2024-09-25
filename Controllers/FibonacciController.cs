@@ -1,5 +1,6 @@
 using FibonacciApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FibonacciApi.Controllers;
 
@@ -9,10 +10,12 @@ public class FibonacciController : ControllerBase
 {
 
     private readonly FibonacciService _fibonacciService;
+    private readonly IMemoryCache _memoryCache;
 
-    public FibonacciController(FibonacciService fibonacciService)
+    public FibonacciController(FibonacciService fibonacciService, IMemoryCache memoryCache)
     {
         _fibonacciService = fibonacciService;
+        _memoryCache = memoryCache;
     }
 
     [Route("subsequence/{startIndex}/{endIndex}/{useCache}")]
@@ -30,6 +33,22 @@ public class FibonacciController : ControllerBase
             return BadRequest("Invalid index range.");
         }
 
+        string cacheKey = $"Fibonacci_{startIndex}_{endIndex}";
+
+        // Check if the result is already in the cache
+        if (useCache && _memoryCache.TryGetValue(cacheKey, out FibonacciResult? cachedResult))
+        {
+            if (cachedResult != null)
+            {
+                // Cache hit - return the cached result
+                return Ok(new
+                {
+                    cachedResult.Subsequence,
+                    Cached = true,
+                });
+            }
+        }
+
         // Convert to the proper units that the service expects
         long maxMemoryBytes = maxMemoryMB * 1024 * 1024;
         int timeoutMilliseconds = timeoutSeconds * 1000;
@@ -37,25 +56,30 @@ public class FibonacciController : ControllerBase
         FibonacciResult result = await _fibonacciService.GenerateSubsequence(
             startIndex,
             endIndex,
-            timeoutMilliseconds, 
+            timeoutMilliseconds,
             maxMemoryBytes);
 
-        // Sort subsequence in ascending order before returning it
+        // Sort subsequence (in place) in ascending order before returning it
         result.Subsequence?.Sort();
 
+        // Cache only complete subsequences
+        if (result.Subsequence != null && result.Subsequence.Count == endIndex - startIndex + 1)
+        {
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                // Cache invalidation after 5 minutes of inactivity
+                .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+
+            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
+        }
+
         // Print the subsequence length
-        Console.WriteLine($"Subsequence length: {result.Subsequence?.Count}"); // debug
+        // Console.WriteLine($"Subsequence length: {result.Subsequence?.Count}"); // debug
 
         var responseBody = new
         {
             result.Subsequence,
             result.TimeoutOccurred,
             result.MemoryLimitReached,
-            // bounce back parameters (to double check)
-            StartIndex = startIndex,
-            EndIndex = endIndex,
-            UseCache = useCache,
-            MaxMemory = maxMemoryMB,
         };
 
         // Check if no numbers were generated and a timeout occurred
