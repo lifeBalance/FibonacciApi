@@ -25,7 +25,7 @@ public class FibonacciController : ControllerBase
             [FromRoute] int endIndex = 20,
             [FromRoute] bool useCache = true,
             [FromQuery] int timeoutMilliseconds = 8000,
-            [FromQuery] int maxMemoryBytes = 1_000_000)
+            [FromQuery] int maxMemoryBytes = 4_000_000)     // Less than 4MB errors out
     {
         // Validate input
         if (startIndex < 0 || endIndex < startIndex)
