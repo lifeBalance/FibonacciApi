@@ -2,7 +2,8 @@
 
 **Web API controllers** should typically derive from [ControllerBase](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase) rather from [Controller](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controller):
 
-> [!NOTE] > `Controller` derives from `ControllerBase` and adds support for **views**, so it's for handling web pages, not web API requests.
+> [!NOTE]
+> `Controller` derives from `ControllerBase` and adds support for **views**, so it's for handling web pages, not web API requests.
 
 ## Attribute Routing
 

@@ -59,3 +59,11 @@ In .NET's [Common Language Runtime](https://learn.microsoft.com/en-us/dotnet/sta
 
 > [!CAUTION]
 > For some reason, using the `Cancel` method on the `CancellationTokenSource`, and then throwing with `cts.Token.ThrowIfCancellationRequested();` wasn't working; for some reason, the `timeoutTask` was marked as **completed**.
+
+---
+[:arrow_backward:][back] ║ [:house:][home] ║ [:arrow_forward:][next]
+
+<!-- navigation -->
+[home]: /README.md
+[back]: ./controllers.md
+[next]: ./cache.md
